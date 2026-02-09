@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Neon Core Defense</title>
+    
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/mobile.css" media="screen and (max-width: 768px)">
+    <link rel="stylesheet" href="css/desktop.css" media="screen and (min-width: 1024px)">
+</head>
+<body>
+    <!-- Game Container -->
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+        
+        <!-- HUD Overlay -->
+        <div id="hud">
+            <div class="stat-group">
+                <div class="stat-box">
+                    <div class="stat-value currency-bits" id="money-display">0</div>
+                    <div class="stat-label">Bits</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="level-display">1</div>
+                    <div class="stat-label">Wave</div>
+                </div>
+            </div>
+            
+            <div class="hp-container">
+                <div class="hp-bar-bg">
+                    <div class="hp-bar-fill" id="core-hp-bar"></div>
+                </div>
+            </div>
+            
+            <div class="stat-group">
+                <div class="stat-box" id="prestige-currency-display" style="display:none;">
+                    <div class="stat-value" style="color:#aa00ff;">0 BYTES</div>
+                    <div class="stat-label">System Power</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Prestige Button -->
+        <button id="prestige-btn" style="display:none;">⚡ REBOOT</button>
+
+        <!-- Notification Area -->
+        <div id="notification-area"></div>
+    </div>
+
+    <!-- Upgrade Panel -->
+    <div id="upgrade-panel">
+        <div class="panel-title">⚙️ SYSTEM UPGRADES</div>
+        <div id="cards-container"></div>
+    </div>
+
+    <!-- Modal Overlay -->
+    <div id="modal-overlay">
+        <div class="modal" id="modal-content">
+            <h2 id="modal-title">CRITICAL FAILURE</h2>
+            <p id="modal-msg">Core Integrity Lost.</p>
+            <button class="btn-primary" id="modal-btn">Initialize Reboot</button>
+        </div>
+    </div>
+
+    <!-- JavaScript Files - Load in correct order -->
+    
+    <!-- 1. Data & Configuration -->
+    <script src="js/data/config.js"></script>
+    <script src="js/data/upgrades.js"></script>
+    <script src="js/data/enemyTypes.js"></script>
+    
+    <!-- 2. Utility Functions -->
+    <script src="js/utils/helpers.js"></script>
+    <script src="js/utils/collision.js"></script>
+    <script src="js/utils/particles.js"></script>
+    
+    <!-- 3. Engine Classes -->
+    <script src="js/engine/Star.js"></script>
+    <script src="js/engine/Particle.js"></script>
+    <script src="js/engine/Shockwave.js"></script>
+    <script src="js/engine/FloatingText.js"></script>
+    <script src="js/engine/Enemy.js"></script>
+    <script src="js/engine/Projectile.js"></script>
+    
+    <!-- 4. Game Systems -->
+    <script src="js/systems/gameState.js"></script>
+    <script src="js/systems/combat.js"></script>
+    <script src="js/systems/spawner.js"></script>
+    <script src="js/systems/upgradeSystem.js"></script>
+    
+    <!-- 5. Rendering -->
+    <script src="js/render.js"></script>
+    
+    <!-- 6. Input Handling -->
+    <script src="js/input.js"></script>
+    
+    <!-- 7. Main Game Loop -->
+    <script src="js/main.js"></script>
+</body>
+</html>
