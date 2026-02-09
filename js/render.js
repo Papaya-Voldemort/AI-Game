@@ -26,7 +26,7 @@
  *   @param {Array} gameState.floaters - Array of floating text objects (damage numbers, etc.)
  * @returns {number} Updated shake amount after decay
  */
-export function draw(ctx, width, height, gameState) {
+function draw(ctx, width, height, gameState) {
     // Clear the entire canvas
     ctx.clearRect(0, 0, width, height);
 

@@ -592,7 +592,7 @@ function renderCards() {
             <div class="card-icon">${u.icon}</div>
             <div class="card-details">
                 <div class="card-title">${u.name}</div>
-                <div class="card-stat">${u.desc(u.getVal(u.count))}</div>
+                <div class="card-stat">${u.desc(u.getVal(u.count), getPrestigeMult(state))}</div>
             </div>
             <div class="card-cost">${isMaxed ? 'MAX' : format(currentCost)}</div>
         `;
@@ -649,7 +649,7 @@ function handleCanvasClick(e) {
             clickY <= enemy.y + enemy.size + hitboxExpansion) {
             
             // Get damage and hit enemy
-            const dmgInfo = getDamage('click', upgrades);
+            const dmgInfo = getDamage('click', upgrades, state);
             const killed = hitEnemy(enemy, dmgInfo, floaters);
             
             if (killed) {

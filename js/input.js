@@ -23,7 +23,7 @@ function handleInputClick(e, canvas, state, enemies) {
         
         // Use expanded hitbox for easier clicking
         if (pointInExpandedCircle(clickX, clickY, enemy.x, enemy.y, enemy.size, 30)) {
-            const dmgInfo = getDamage('click', upgrades);
+            const dmgInfo = getDamage('click', upgrades, state);
             const killed = hitEnemy(enemy, dmgInfo, floaters);
             
             if (killed) {

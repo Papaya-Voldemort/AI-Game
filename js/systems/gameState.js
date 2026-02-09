@@ -1,55 +1,45 @@
 /**
  * Game State Management
- * Centralizes all game state and provides access methods
+ * Utility functions for managing game state
+ * Expects global state and upgrades variables to exist
  */
 
-let state = null;
-let upgrades = [];
-
 function initGameState(config, upgradesData) {
-    // Clone the initial state from config
-    state = { ...config.INITIAL_STATE };
+    // Create new state from config
+    const newState = { ...config.INITIAL_STATE };
     
     // Clone upgrades data
-    upgrades = upgradesData.map(u => ({ ...u }));
+    const newUpgrades = upgradesData.map(u => ({ ...u }));
     
-    return { state, upgrades };
+    return { state: newState, upgrades: newUpgrades };
 }
 
-function getState() {
-    return state;
+function getPrestigeMult(gameState) {
+    return 1 + (gameState.prestigeCurrency * CONFIG.PRESTIGE_MULT_PER_BYTE);
 }
 
-function getUpgrades() {
-    return upgrades;
-}
-
-function getPrestigeMult() {
-    return 1 + (state.prestigeCurrency * CONFIG.PRESTIGE_MULT_PER_BYTE);
-}
-
-function resetGameState(isPrestige) {
+function resetGameState(gameState, gameUpgrades, isPrestige) {
     if (isPrestige) {
-        const earned = Math.floor(state.level / 5);
-        state.prestigeCurrency += earned;
+        const earned = Math.floor(gameState.level / 5);
+        gameState.prestigeCurrency += earned;
         return earned;
     }
 
-    state.money = 0;
-    state.level = 1;
-    state.coreHp = state.maxCoreHp;
-    state.spawnRate = 1500;
-    state.enemiesKilled = 0;
-    state.spawnTimer = 0;
-    state.gameOver = false;
-    state.isPlaying = true;
+    gameState.money = 0;
+    gameState.level = 1;
+    gameState.coreHp = gameState.maxCoreHp;
+    gameState.spawnRate = 1500;
+    gameState.enemiesKilled = 0;
+    gameState.spawnTimer = 0;
+    gameState.gameOver = false;
+    gameState.isPlaying = true;
     
-    upgrades.forEach(u => u.count = 0);
+    gameUpgrades.forEach(u => u.count = 0);
     
     return null;
 }
 
-function updateMaxHP() {
-    const maxHpU = upgrades.find(u => u.id === 'maxHp');
-    state.maxCoreHp = maxHpU.getVal(maxHpU.count);
+function updateMaxHP(gameState, gameUpgrades) {
+    const maxHpU = gameUpgrades.find(u => u.id === 'maxHp');
+    gameState.maxCoreHp = maxHpU.getVal(maxHpU.count);
 }

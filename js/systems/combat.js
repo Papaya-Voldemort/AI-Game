@@ -3,8 +3,8 @@
  * Handles damage calculation and enemy hits
  */
 
-function getDamage(source, upgrades) {
-    const prestigeMult = getPrestigeMult();
+function getDamage(source, upgrades, gameState) {
+    const prestigeMult = getPrestigeMult(gameState);
     let val = 0;
     let isCrit = false;
 

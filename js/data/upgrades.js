@@ -12,7 +12,7 @@ const UPGRADES = [
         costMult: 1.5,
         count: 0,
         getVal: (n) => 3 + (n * 4),
-        desc: (v) => `Dmg: ${format(v * getPrestigeMult())}`
+        desc: (v, prestigeMult = 1) => `Dmg: ${format(v * prestigeMult)}`
     },
     {
         id: 'autoDmg',
@@ -22,7 +22,7 @@ const UPGRADES = [
         costMult: 1.35,
         count: 0,
         getVal: (n) => n === 0 ? 0 : 8 + (n * 5),
-        desc: (v) => `Dmg: ${format(v * getPrestigeMult())}`
+        desc: (v, prestigeMult = 1) => `Dmg: ${format(v * prestigeMult)}`
     },
     {
         id: 'autoSpeed',
