@@ -1,0 +1,109 @@
+/**
+ * Desktop-specific styles
+ * Enhanced experience for larger screens
+ */
+
+@media only screen and (min-width: 1024px) {
+    /* Larger game container */
+    #game-container {
+        max-width: 1920px;
+        margin: 0 auto;
+    }
+    
+    /* Better spacing for upgrade cards */
+    #cards-container {
+        gap: 12px;
+        padding: 15px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .card {
+        min-width: 110px;
+        padding: 14px 10px;
+        transition: all 0.2s ease;
+    }
+    
+    .card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.6);
+    }
+    
+    /* Larger stats */
+    .stat-box {
+        min-width: 85px;
+        padding: 10px 18px;
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+    }
+    
+    .stat-label {
+        font-size: 0.7rem;
+    }
+    
+    /* HP Bar */
+    .hp-container {
+        max-width: 500px;
+    }
+    
+    /* Modal */
+    .modal {
+        max-width: 550px;
+        padding: 50px;
+    }
+    
+    .modal h2 {
+        font-size: 2.5rem;
+    }
+    
+    .modal p {
+        font-size: 1.2rem;
+    }
+    
+    /* Notification */
+    .notification {
+        font-size: 1rem;
+        padding: 14px 24px;
+    }
+    
+    /* Add keyboard shortcuts hint */
+    body::after {
+        content: "💡 Tip: Click enemies to shoot!";
+        position: fixed;
+        bottom: 10px;
+        right: 10px;
+        background: rgba(0, 0, 0, 0.7);
+        color: #00ffff;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        opacity: 0.6;
+        pointer-events: none;
+    }
+}
+
+@media only screen and (min-width: 1440px) {
+    /* Ultra-wide support */
+    #game-container {
+        max-width: 2560px;
+    }
+    
+    .card {
+        min-width: 120px;
+    }
+    
+    .card-icon {
+        font-size: 1.8rem;
+    }
+}
+
+/* High DPI displays */
+@media only screen and (-webkit-min-device-pixel-ratio: 2),
+       only screen and (min-resolution: 192dpi) {
+    canvas {
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+    }
+}
