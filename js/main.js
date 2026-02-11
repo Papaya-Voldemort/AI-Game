@@ -332,6 +332,12 @@ function updateAutoFire(dt) {
         fireRate *= getSkinSystem().getFireRateMultiplier();
     }
     
+    // Apply skill tree fire rate multiplier
+    const skillEffects = typeof getSkillTreeEffects === 'function' ? getSkillTreeEffects() : null;
+    if (skillEffects && skillEffects.fireRateMult) {
+        fireRate *= skillEffects.fireRateMult;
+    }
+    
     autoFireTimer -= dt;
     
     if (autoFireTimer <= 0 && enemies.length > 0) {
@@ -402,11 +408,28 @@ function updateRegen(dt) {
     const regenU = upgrades.find(u => u.id === 'regen');
     const regenLvl = regenU.count;
     
-    if (regenLvl > 0 && state.coreHp < state.maxCoreHp) {
+    if (state.coreHp < state.maxCoreHp) {
         regenTimer += dt;
         if (regenTimer > CONFIG.REGEN_TICK_RATE) {
-            const amount = regenU.getVal(regenLvl);
-            state.coreHp = Math.min(state.maxCoreHp, state.coreHp + amount);
+            const skillEffects = typeof getSkillTreeEffects === 'function' ? getSkillTreeEffects() : null;
+            let totalRegen = 0.5; // Base regeneration: 0.5 HP/s
+            
+            // Add upgrade regen
+            if (regenLvl > 0) {
+                totalRegen += regenU.getVal(regenLvl);
+            }
+            
+            // Add skill tree regen
+            if (skillEffects && skillEffects.hpRegen > 0) {
+                totalRegen += skillEffects.hpRegen;
+            }
+            
+            // Apply regeneration boost when below 50% HP
+            if (skillEffects && skillEffects.regenMultiplier > 1 && state.coreHp / state.maxCoreHp < 0.5) {
+                totalRegen *= skillEffects.regenMultiplier;
+            }
+            
+            state.coreHp = Math.min(state.maxCoreHp, state.coreHp + totalRegen);
             updateHpBar();
             regenTimer = 0;
         }
@@ -1779,4 +1802,57 @@ if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initGame);
 } else {
     initGame();
+}
+
+// ============================================================================
+// DEBUG COMMANDS
+// ============================================================================
+
+/**
+ * Set the game level directly (debug command)
+ * @param {number} lvl - The level to set (1-999)
+ * @param {boolean} clearEnemies - Whether to clear existing enemies (default: true)
+ */
+function setLevel(lvl, clearEnemies = true) {
+    if (typeof state === 'undefined' || !state) {
+        console.error('Game not initialized yet');
+        return;
+    }
+    
+    if (typeof lvl !== 'number' || lvl < 1 || lvl > 999) {
+        console.error('Level must be a number between 1 and 999');
+        return;
+    }
+    
+    // Update level
+    const oldLevel = state.level;
+    state.level = Math.floor(lvl);
+    
+    // Clear enemies if requested
+    if (clearEnemies && typeof enemies !== 'undefined') {
+        enemies.length = 0;
+    }
+    
+    // Reset spawn timer to prevent immediate spawn
+    state.spawnTimer = state.spawnRate || 1500;
+    
+    // Update UI if function exists
+    if (typeof updateUI === 'function') {
+        updateUI();
+    }
+    
+    console.log(`Level set from ${oldLevel} to ${state.level}`);
+    
+    // Special message for level 100
+    if (state.level === 100) {
+        console.log('%c⚠️ EPIC BOSS WARNING: OMNICRON APPROACHES!', 'color: #ff00aa; font-size: 16px; font-weight: bold;');
+        console.log('%cThe epic boss will spawn next. Prepare for battle!', 'color: #00ffff;');
+    }
+    
+    return state.level;
+}
+
+// Expose to global scope for browser console access
+if (typeof window !== 'undefined') {
+    window.setLevel = setLevel;
 }

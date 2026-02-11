@@ -108,6 +108,22 @@ const ENEMY_TYPES = {
         speedMultiplier: 0.25,
         bitsMultiplier: 50,
         spawnEveryNWaves: 10
+    },
+    
+    EPIC_BOSS: {
+        type: 'epic_boss',
+        name: 'Omnicron',
+        color: '#ff00aa',
+        secondaryColor: '#00ffff',
+        sizeMultiplier: 4.5,
+        hpMultiplier: 100,
+        speedMultiplier: 0.15,
+        bitsMultiplier: 500,
+        spawnAtWave: 100,
+        specialAbilities: ['shield', 'summon', 'laser'],
+        shieldCooldown: 8000,
+        summonCooldown: 5000,
+        laserChargeTime: 3000
     }
 };
 

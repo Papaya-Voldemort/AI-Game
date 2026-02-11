@@ -9,7 +9,7 @@ Usage:
     python scripts/inline_assets.py index.html -o dist/single.html
 
 Features:
-- Inlines <link rel="stylesheet"> tags as <style> (preserves media attribute)
+- Inlines <link rel="stylesheet"> tags as <style> (preserves media attribu/nete)
 - Inlines <script src=> tags as <script> (preserves type, defer/async where safe)
 - Replaces tag `src` (img, audio, video, source) with data URIs
 - Rewrites url(...) references inside CSS to data URIs (fonts, images)

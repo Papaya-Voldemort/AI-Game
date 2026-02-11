@@ -160,6 +160,7 @@ function getSkillTreeEffects() {
         // Defense
         maxHPBonus: 0,
         hpRegen: 0,
+        regenMultiplier: 1,
         damageReduction: 1, // Multiplier (0.9 = 10% reduction)
         freezeDurationMult: 1,
         emergencyHeal: 0,
@@ -235,6 +236,9 @@ function getSkillTreeEffects() {
                 break;
             case 'nano_repair':
                 effects.hpRegen += value;
+                break;
+            case 'regeneration_boost':
+                effects.regenMultiplier *= value;
                 break;
             case 'hardened_plating':
                 effects.damageReduction *= value;

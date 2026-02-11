@@ -132,8 +132,36 @@ class Enemy extends Entity {
             this.trailMaxLength = 8;
         }
 
-        // Boss Logic
-        if (lvl % 10 === 0 && !enemies.some(e => e.isBoss)) {
+        // Epic Boss Logic - Level 100 only
+        if (lvl === 100 && !enemies.some(e => e.isEpicBoss)) {
+            this.isEpicBoss = true;
+            this.isBoss = true; // Still counts as boss for mechanics
+            this.maxHp *= 100; // 100x HP
+            this.hp = this.maxHp;
+            this.size = 120;
+            this.speed = 0.15;
+            this.color = '#ff00aa'; // Magenta/Pink
+            this.secondaryColor = '#00ffff'; // Cyan
+            this.bits *= 500; // 500x bits
+            this.type = 'epic_boss';
+            this.rotationSpeed = 0.005;
+            this.bobSpeed = 0.001;
+            this.trailMaxLength = 20;
+            
+            // Epic Boss special abilities
+            this.shieldActive = false;
+            this.shieldTimer = 0;
+            this.shieldCooldown = 8000;
+            this.summonTimer = 0;
+            this.summonCooldown = 5000;
+            this.laserChargeTimer = 0;
+            this.laserChargeTime = 3000;
+            this.isChargingLaser = false;
+            this.laserAngle = 0;
+            this.pulsePhase = 0;
+        }
+        // Regular Boss Logic
+        else if (lvl % 10 === 0 && !enemies.some(e => e.isBoss)) {
             this.isBoss = true;
             this.maxHp *= 15;
             this.hp = this.maxHp;
@@ -238,6 +266,81 @@ class Enemy extends Entity {
             }
         }
 
+        // Epic Boss behavior
+        if (this.type === 'epic_boss' && !this.frozen && !this.isDying) {
+            this.pulsePhase += dt * 0.002;
+            
+            // Shield ability - activates periodically
+            this.shieldTimer += dt;
+            if (this.shieldTimer > this.shieldCooldown) {
+                this.shieldActive = true;
+                if (this.shieldTimer > this.shieldCooldown + 3000) {
+                    this.shieldActive = false;
+                    this.shieldTimer = 0;
+                }
+            }
+            
+            // Summon ability - spawns mini enemies
+            this.summonTimer += dt;
+            if (this.summonTimer > this.summonCooldown && typeof enemies !== 'undefined') {
+                this.summonTimer = 0;
+                // Summon 2-3 mini versions
+                const numMinions = 2 + Math.floor(Math.random() * 2);
+                for (let i = 0; i < numMinions; i++) {
+                    const minion = new Enemy(50, height, 800, [], enemies);
+                    minion.x = this.x + Math.random() * 100 - 50;
+                    minion.y = this.y + Math.random() * 100 - 50;
+                    minion.maxHp = Math.floor(minion.maxHp * 0.3);
+                    minion.hp = minion.maxHp;
+                    minion.size = 15;
+                    minion.color = '#ff55aa';
+                    minion.bits = Math.floor(minion.bits * 0.5);
+                    enemies.push(minion);
+                }
+                // Summon visual effect
+                if (typeof ParticleEngine !== 'undefined') {
+                    ParticleEngine.emit('summon', this.x, this.y, { color: '#ff00aa', count: 20 });
+                }
+            }
+            
+            // Laser charge ability
+            this.laserChargeTimer += dt;
+            if (this.laserChargeTimer > this.laserChargeTime && !this.isChargingLaser) {
+                this.isChargingLaser = true;
+                this.laserAngle = this.rotation;
+            }
+            if (this.isChargingLaser) {
+                if (this.laserChargeTimer > this.laserChargeTime + 1500) {
+                    this.isChargingLaser = false;
+                    this.laserChargeTimer = 0;
+                    // Laser damage to core
+                    if (typeof takeDamage === 'function') {
+                        takeDamage(this.maxHp * 0.05); // 5% of boss max HP as damage
+                    }
+                    // Laser visual effect
+                    if (typeof ParticleEngine !== 'undefined') {
+                        ParticleEngine.emit('explosion', 60, this.y, { color: '#00ffff', count: 30 });
+                    }
+                }
+            }
+            
+            // Epic boss trail
+            this.trailTimer += dt;
+            if (this.trailTimer > 30) {
+                this.trail.push({
+                    x: this.x,
+                    y: this.y,
+                    alpha: 0.8,
+                    scale: 1.2,
+                    color: this.secondaryColor
+                });
+                if (this.trail.length > this.trailMaxLength) {
+                    this.trail.shift();
+                }
+                this.trailTimer = 0;
+            }
+        }
+
         // Update trail positions and fade
         for (let i = this.trail.length - 1; i >= 0; i--) {
             this.trail[i].alpha -= dt / 400;
@@ -307,7 +410,7 @@ class Enemy extends Entity {
             for (let i = 0; i < this.trail.length; i += 2) {
                 const t = this.trail[i];
                 ctx.globalAlpha = t.alpha * 0.3;
-                ctx.fillStyle = this.color;
+                ctx.fillStyle = t.color || this.color;
                 ctx.beginPath();
                 ctx.arc(t.x, t.y, this.size * t.scale * 0.4, 0, 6.2832);
                 ctx.fill();
@@ -353,7 +456,63 @@ class Enemy extends Entity {
         
         // OPTIMIZED: Simplified enemy shapes for better performance
         ctx.beginPath();
-        if (this.isBoss) {
+        if (this.type === 'epic_boss') {
+            // Epic boss - massive pulsing shape with dual colors
+            const pulseScale = 1 + Math.sin(this.pulsePhase) * 0.1;
+            
+            // Outer ring (secondary color)
+            ctx.fillStyle = this.secondaryColor;
+            for (let i = 0; i < 8; i++) {
+                const angle = (i / 8) * 6.2832 + this.spawnTime / 1000;
+                const r = this.size * 1.2 * pulseScale;
+                ctx.lineTo(Math.cos(angle) * r, Math.sin(angle) * r);
+            }
+            ctx.fill();
+            
+            // Inner shape (primary color) - rotating octagon
+            ctx.beginPath();
+            ctx.fillStyle = this.color;
+            for (let i = 0; i < 8; i++) {
+                const angle = (i / 8) * 6.2832 - this.spawnTime / 800;
+                const r = this.size * pulseScale;
+                ctx.lineTo(Math.cos(angle) * r, Math.sin(angle) * r);
+            }
+            ctx.fill();
+            
+            // Core
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(0, 0, this.size * 0.25 * pulseScale, 0, 6.2832);
+            ctx.fill();
+            
+            // Shield visual
+            if (this.shieldActive) {
+                ctx.strokeStyle = '#00ffff';
+                ctx.lineWidth = 3;
+                ctx.globalAlpha = 0.5 + Math.sin(this.spawnTime / 200) * 0.3;
+                ctx.beginPath();
+                ctx.arc(0, 0, this.size * 1.5, 0, 6.2832);
+                ctx.stroke();
+                ctx.globalAlpha = 1;
+            }
+            
+            // Laser charging visual
+            if (this.isChargingLaser) {
+                const chargeProgress = this.laserChargeTimer / (this.laserChargeTime + 1500);
+                ctx.strokeStyle = `rgba(0, 255, 255, ${chargeProgress})`;
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(-this.x + 60, 0); // Line to core
+                ctx.stroke();
+                
+                // Charge glow
+                ctx.fillStyle = `rgba(0, 255, 255, ${chargeProgress * 0.5})`;
+                ctx.beginPath();
+                ctx.arc(0, 0, this.size * 0.5, 0, 6.2832);
+                ctx.fill();
+            }
+        } else if (this.isBoss) {
             // Simplified boss shape - hexagon instead of star
             for (let i = 0; i < 6; i++) {
                 const angle = (i / 6) * 6.2832 + this.spawnTime / 1500;
@@ -422,7 +581,8 @@ class Enemy extends Entity {
         ctx.restore();
         
         // HP Bar - simplified
-        if (this.hp < this.maxHp && !this.isDying) {
+        // Epic boss always shows HP bar
+        if ((this.hp < this.maxHp || this.type === 'epic_boss') && !this.isDying) {
             const pct = Math.max(0, this.hp / this.maxHp);
             const w = 32;
             ctx.fillStyle = 'rgba(0,0,0,0.8)';

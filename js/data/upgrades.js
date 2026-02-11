@@ -32,7 +32,7 @@ const UPGRADES = [
         costMult: 1.8,
         count: 0,
         max: 25,
-        getVal: (n) => Math.max(200, 2000 - (n * 72)),
+        getVal: (n) => Math.max(100, 2000 - (n * 100)),
         desc: (v) => `RPM: ${(60000/v).toFixed(0)}`
     },
     {
@@ -96,7 +96,7 @@ const UPGRADES = [
         baseCost: 400,
         costMult: 1.55,
         count: 0,
-        getVal: (n) => n * 2,
+        getVal: (n) => n * 1.5,
         desc: (v) => `+${v} HP/s`
     },
     {

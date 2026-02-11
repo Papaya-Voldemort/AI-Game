@@ -62,7 +62,6 @@ function getDamage(source, upgrades, gameState) {
     val *= prestigeMult;
     
     // Apply skill tree damage multipliers
-    const skillEffects = typeof getSkillTreeEffects === 'function' ? getSkillTreeEffects() : null;
     if (skillEffects) {
         // All damage multiplier
         if (skillEffects.allDamageMult && skillEffects.allDamageMult !== 1) {
@@ -95,6 +94,19 @@ function getDamage(source, upgrades, gameState) {
 
 function hitEnemy(enemy, damageInfo, floaters) {
     let { damage, isCrit } = damageInfo;
+    
+    // Epic boss shield check - 50% damage reduction when shield is active
+    if (enemy.type === 'epic_boss' && enemy.shieldActive) {
+        damage = Math.floor(damage * 0.5);
+        // Shield hit visual
+        if (typeof createParticles === 'function') {
+            createParticles(enemy.x, enemy.y, '#00ffff', 3);
+        }
+        // Show "SHIELDED" text occasionally
+        if (Math.random() < 0.3) {
+            floaters.push(new FloatingText(enemy.x, enemy.y - 40, 'SHIELDED!', '#00ffff', 14));
+        }
+    }
     
     // Apply armor reduction
     if (enemy.armor > 0) {
