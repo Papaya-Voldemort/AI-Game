@@ -56,6 +56,171 @@ let currentUpgradeOfferIds = [];
 
 const CORE_UPGRADE_IDS = ['clickDmg', 'autoDmg', 'autoSpeed', 'maxHp'];
 
+let adaptiveState = {
+    paceBonus: 1,
+    pressure: 0
+};
+
+const AudioEngine = {
+    enabled: false,
+    initialized: false,
+    ctx: null,
+    ambientGain: null,
+    combatGain: null,
+    ambianceOsc: null,
+    pulseLfo: null,
+    pulseGain: null,
+
+    init() {
+        if (this.initialized) return;
+
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextClass) {
+            console.warn('WebAudio not supported in this browser');
+            return;
+        }
+
+        this.ctx = new AudioContextClass();
+
+        this.ambientGain = this.ctx.createGain();
+        this.ambientGain.gain.value = 0;
+        this.ambientGain.connect(this.ctx.destination);
+
+        this.combatGain = this.ctx.createGain();
+        this.combatGain.gain.value = 0;
+        this.combatGain.connect(this.ctx.destination);
+
+        this.ambianceOsc = this.ctx.createOscillator();
+        this.ambianceOsc.type = 'triangle';
+        this.ambianceOsc.frequency.value = 58;
+
+        this.pulseLfo = this.ctx.createOscillator();
+        this.pulseLfo.type = 'sine';
+        this.pulseLfo.frequency.value = 0.22;
+
+        this.pulseGain = this.ctx.createGain();
+        this.pulseGain.gain.value = 7;
+
+        this.pulseLfo.connect(this.pulseGain);
+        this.pulseGain.connect(this.ambianceOsc.frequency);
+        this.ambianceOsc.connect(this.ambientGain);
+
+        this.ambianceOsc.start();
+        this.pulseLfo.start();
+
+        this.initialized = true;
+    },
+
+    setEnabled(value) {
+        this.init();
+        if (!this.initialized) return;
+
+        this.enabled = value;
+        if (this.enabled && this.ctx.state === 'suspended') {
+            this.ctx.resume();
+        }
+
+        const now = this.ctx.currentTime;
+        this.ambientGain.gain.cancelScheduledValues(now);
+        this.combatGain.gain.cancelScheduledValues(now);
+        this.ambientGain.gain.linearRampToValueAtTime(this.enabled ? 0.05 : 0, now + 0.25);
+        this.combatGain.gain.linearRampToValueAtTime(0, now + 0.12);
+    },
+
+    updateIntensity() {
+        if (!this.initialized || !this.enabled || !state || !state.isPlaying || state.isPaused) return;
+
+        const now = this.ctx.currentTime;
+        const hpRatio = state.maxCoreHp > 0 ? state.coreHp / state.maxCoreHp : 1;
+        const danger = Math.max(0, 1 - hpRatio);
+        const enemyPressure = Math.min(1, enemies.length / 24);
+        const levelPressure = Math.min(1, state.level / 60);
+        const intensity = Math.min(1, 0.18 + enemyPressure * 0.5 + levelPressure * 0.4 + danger * 0.7);
+
+        this.ambientGain.gain.cancelScheduledValues(now);
+        this.combatGain.gain.cancelScheduledValues(now);
+        this.ambientGain.gain.linearRampToValueAtTime(0.04 + (1 - danger) * 0.03, now + 0.4);
+        this.combatGain.gain.linearRampToValueAtTime(0.01 + intensity * 0.09, now + 0.12);
+    },
+
+    stopCombatLayer() {
+        if (!this.initialized) return;
+        const now = this.ctx.currentTime;
+        this.combatGain.gain.cancelScheduledValues(now);
+        this.combatGain.gain.linearRampToValueAtTime(0, now + 0.18);
+    },
+
+    beep(freq, durationMs, gain, type = 'sine') {
+        if (!this.initialized || !this.enabled) return;
+
+        const osc = this.ctx.createOscillator();
+        const beepGain = this.ctx.createGain();
+        osc.type = type;
+        osc.frequency.value = freq;
+
+        const now = this.ctx.currentTime;
+        beepGain.gain.value = 0;
+        beepGain.gain.linearRampToValueAtTime(gain, now + 0.01);
+        beepGain.gain.exponentialRampToValueAtTime(0.0001, now + durationMs / 1000);
+
+        osc.connect(beepGain);
+        beepGain.connect(this.combatGain);
+
+        osc.start(now);
+        osc.stop(now + durationMs / 1000 + 0.02);
+    },
+
+    shot() {
+        this.beep(440 + Math.random() * 120, 90, 0.32, 'square');
+    },
+
+    hit() {
+        this.beep(180 + Math.random() * 80, 120, 0.28, 'triangle');
+    },
+
+    kill() {
+        this.beep(620 + Math.random() * 90, 130, 0.35, 'sawtooth');
+    },
+
+    damage() {
+        this.beep(95, 180, 0.4, 'square');
+    },
+
+    wave(level) {
+        const steps = [420, 560, 700];
+        steps.forEach((freq, i) => {
+            setTimeout(() => this.beep(freq + level * 1.5, 150, 0.24, 'triangle'), i * 90);
+        });
+    }
+};
+
+function toggleAudio() {
+    const nextValue = !AudioEngine.enabled;
+    AudioEngine.setEnabled(nextValue);
+    updateAudioToggleUI();
+    showNotification(nextValue ? 'Audio Reactor Online' : 'Audio Reactor Offline');
+}
+
+function updateAudioToggleUI() {
+    if (!ui.audioToggleBtn) return;
+    ui.audioToggleBtn.classList.toggle('is-on', AudioEngine.enabled);
+    ui.audioToggleBtn.innerText = AudioEngine.enabled ? '🔊' : '🔇';
+}
+
+function updateAdaptiveDifficulty() {
+    const settings = CONFIG.ADAPTIVE_DIFFICULTY;
+    const hpRatio = state.maxCoreHp > 0 ? state.coreHp / state.maxCoreHp : 1;
+    const dangerRateBoost = hpRatio < settings.DANGER_HP_THRESHOLD ? settings.DANGER_RATE_BOOST : 0;
+    const underLevelGrace = Math.max(0, CONFIG.EARLY_GAME_GRACE_LEVELS - state.level) * 0.05;
+    const momentum = Math.min(0.35, Math.max(0, state.level - 10) * settings.MOMENTUM_BONUS_PER_LEVEL);
+
+    adaptiveState.pressure = Math.max(0, Math.min(1, (enemies.length / 20) + (1 - hpRatio) * 0.55));
+
+    const desiredPace = 1 + underLevelGrace + dangerRateBoost - momentum;
+    adaptiveState.paceBonus += (desiredPace - adaptiveState.paceBonus) * 0.08;
+    adaptiveState.paceBonus = Math.max(settings.MIN_RATE_MULT, Math.min(settings.MAX_RATE_MULT, adaptiveState.paceBonus));
+}
+
 // ============================================================================
 // INITIALIZATION
 // ============================================================================
@@ -146,6 +311,7 @@ function initGame() {
     
     // Setup UI event handlers
     setupUIHandlers();
+    updateAudioToggleUI();
     
     // Initial UI render
     updateUI();
@@ -184,6 +350,7 @@ function cacheUI() {
         managementScreen: document.getElementById('management-screen'),
         pauseOverlay: document.getElementById('pause-overlay'),
         pauseBtn: document.getElementById('pause-btn'),
+        audioToggleBtn: document.getElementById('audio-toggle-btn'),
         resumeBtn: document.getElementById('resume-btn'),
         toManagementBtn: document.getElementById('to-management-btn'),
         restartBtn: document.getElementById('restart-btn'),
@@ -218,6 +385,10 @@ function setupUIHandlers() {
 
     if (ui.pauseBtn) {
         ui.pauseBtn.onclick = togglePause;
+    }
+
+    if (ui.audioToggleBtn) {
+        ui.audioToggleBtn.onclick = toggleAudio;
     }
 
     if (ui.resumeBtn) {
@@ -280,8 +451,11 @@ function update(dt) {
         nebula.update(dt);
     }
 
+    // Adaptive pacing: ease early game and flex difficulty based on pressure
+    updateAdaptiveDifficulty();
+
     // Update spawner system
-    updateSpawner(dt, state, enemies, height, spawnDistance, upgrades);
+    updateSpawner(dt, state, enemies, height, spawnDistance, upgrades, adaptiveState.paceBonus);
 
     // Track closest enemy for turret targeting
     updateClosestEnemy();
@@ -300,6 +474,9 @@ function update(dt) {
 
     // Cleanup deleted entities
     cleanupEntities();
+
+    // Dynamic soundtrack reacts to pressure and danger
+    AudioEngine.updateIntensity();
 }
 
 /**
@@ -397,6 +574,7 @@ function updateAutoFire(dt) {
             autoFireTimer = fireRate;
             coreRecoil = 8;
             shakeScreen(2);
+            AudioEngine.shot();
         }
     }
 }
@@ -468,8 +646,10 @@ function updateEntities(dt) {
  * Called when projectile hits an enemy
  */
 function onProjectileHit(enemy, projectile) {
+    AudioEngine.hit();
     const killed = onEnemyKill(enemy, state);
     if (killed) {
+        AudioEngine.kill();
         handleLevelUp();
     }
 }
@@ -479,6 +659,7 @@ function onProjectileHit(enemy, projectile) {
  */
 function handleLevelUp() {
     document.getElementById('level-display').innerText = state.level;
+    AudioEngine.wave(state.level);
     
     if (state.level % 5 === 0) {
         showNotification(`⚠️ WAVE ${state.level} DETECTED ⚠️`);
@@ -879,6 +1060,7 @@ function takeDamage(amount) {
     
     // Core recoil effect
     coreRecoil = Math.min(20, 8 + amount * 0.3);
+    AudioEngine.damage();
 
     if (state.coreHp <= 0) {
         gameOver();
@@ -947,6 +1129,8 @@ function resetRun(isPrestige) {
     autoFireTimer = 0;
     regenTimer = 0;
     coreRecoil = 0;
+    adaptiveState.paceBonus = 1;
+    adaptiveState.pressure = 0;
     
     // Reset card render flag
     isInitialCardRender = true;
@@ -1001,6 +1185,7 @@ function showManagementScreen({ fromRun }) {
     }
     setActiveScreen('management');
     updateManagementUI();
+    AudioEngine.stopCombatLayer();
 
     if (fromRun && pendingCredits > 0) {
         const creditsToCollect = pendingCredits;
@@ -1046,6 +1231,7 @@ function startRun(isRestart) {
     if (isRestart) {
         showNotification('RUN RESTARTED');
     }
+    showNotification('Adaptive Threat Analysis Active');
     state.isPlaying = true;
     state.isPaused = false;
     state.gameOver = false;
@@ -1062,6 +1248,7 @@ function startRun(isRestart) {
 function pauseGame() {
     if (!state.isPlaying || state.gameOver || state.isPaused) return;
     state.isPaused = true;
+    AudioEngine.stopCombatLayer();
     if (ui.pauseOverlay) {
         ui.pauseOverlay.classList.add('is-visible');
         ui.pauseOverlay.setAttribute('aria-hidden', 'false');
@@ -1773,6 +1960,12 @@ function handleCanvasClick(e) {
             
             hit = true;
             coreRecoil = 5;
+            AudioEngine.shot();
+            if (killed) {
+                AudioEngine.kill();
+            } else {
+                AudioEngine.hit();
+            }
             break;
         }
     }
