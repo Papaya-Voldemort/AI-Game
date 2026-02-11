@@ -1,109 +1,88 @@
 /**
- * Desktop-specific styles
- * Enhanced experience for larger screens
+ * Desktop-specific enhancements
+ * Additional polish for larger screens
+ * Note: Main responsive styles are in main.css
  */
 
 @media only screen and (min-width: 1024px) {
-    /* Larger game container */
+    /* Enhanced hover states for desktop */
+    .card:hover {
+        transform: translateY(-10px) scale(1.04);
+    }
+    
+    .perm-card:hover {
+        transform: translateY(-8px) scale(1.03);
+    }
+    
+    /* Add keyboard shortcut hints */
+    #gameplay-screen.is-active::after {
+        content: "ESC to Pause";
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: rgba(10, 12, 20, 0.9);
+        backdrop-filter: blur(10px);
+        color: var(--color-accent-cyan);
+        padding: 10px 16px;
+        border-radius: 10px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        letter-spacing: 1px;
+        opacity: 0.7;
+        pointer-events: none;
+        border: 1px solid var(--color-border);
+        transition: opacity 0.3s;
+    }
+    
+    #gameplay-screen.is-active:hover::after {
+        opacity: 1;
+    }
+    
+    /* Larger management grid on wide screens */
+    @media only screen and (min-width: 1400px) {
+        .management-grid {
+            grid-template-columns: 1fr;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        
+        .placeholder-grid {
+            grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+        }
+        
+        .tree-placeholder {
+            grid-template-columns: repeat(6, minmax(100px, 1fr));
+        }
+    }
+}
+
+/* Ultra-wide screens */
+@media only screen and (min-width: 1920px) {
     #game-container {
         max-width: 1920px;
         margin: 0 auto;
     }
     
-    /* Better spacing for upgrade cards */
-    #cards-container {
-        gap: 12px;
-        padding: 15px;
-        max-width: 1200px;
+    .management-content {
+        max-width: 1600px;
         margin: 0 auto;
     }
-    
-    .card {
-        min-width: 110px;
-        padding: 14px 10px;
-        transition: all 0.2s ease;
-    }
-    
-    .card:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 15px 30px rgba(0,0,0,0.6);
-    }
-    
-    /* Larger stats */
-    .stat-box {
-        min-width: 85px;
-        padding: 10px 18px;
-    }
-    
-    .stat-value {
-        font-size: 1.5rem;
-    }
-    
-    .stat-label {
-        font-size: 0.7rem;
-    }
-    
-    /* HP Bar */
-    .hp-container {
-        max-width: 500px;
-    }
-    
-    /* Modal */
-    .modal {
-        max-width: 550px;
-        padding: 50px;
-    }
-    
-    .modal h2 {
-        font-size: 2.5rem;
-    }
-    
-    .modal p {
-        font-size: 1.2rem;
-    }
-    
-    /* Notification */
-    .notification {
-        font-size: 1rem;
-        padding: 14px 24px;
-    }
-    
-    /* Add keyboard shortcuts hint */
-    body::after {
-        content: "💡 Tip: Click enemies to shoot!";
-        position: fixed;
-        bottom: 10px;
-        right: 10px;
-        background: rgba(0, 0, 0, 0.7);
-        color: #00ffff;
-        padding: 8px 12px;
-        border-radius: 8px;
-        font-size: 0.8rem;
-        opacity: 0.6;
-        pointer-events: none;
-    }
 }
 
-@media only screen and (min-width: 1440px) {
-    /* Ultra-wide support */
-    #game-container {
-        max-width: 2560px;
-    }
-    
-    .card {
-        min-width: 120px;
-    }
-    
-    .card-icon {
-        font-size: 1.8rem;
-    }
-}
-
-/* High DPI displays */
+/* High DPI / Retina displays */
 @media only screen and (-webkit-min-device-pixel-ratio: 2),
        only screen and (min-resolution: 192dpi) {
     canvas {
         image-rendering: -webkit-optimize-contrast;
         image-rendering: crisp-edges;
+    }
+    
+    /* Sharper text on retina */
+    .card-title,
+    .perm-name,
+    .panel-block-header {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
     }
 }

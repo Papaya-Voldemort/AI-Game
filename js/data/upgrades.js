@@ -11,7 +11,7 @@ const UPGRADES = [
         baseCost: 15,
         costMult: 1.5,
         count: 0,
-        getVal: (n) => 3 + (n * 4),
+        getVal: (n) => 1 + (n * 4),
         desc: (v, prestigeMult = 1) => `Dmg: ${format(v * prestigeMult)}`
     },
     {

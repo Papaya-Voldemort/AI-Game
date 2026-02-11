@@ -4,26 +4,92 @@
  */
 
 function getDamage(source, upgrades, gameState) {
-    const prestigeMult = getPrestigeMult(gameState);
+    const resolvedUpgrades = upgrades || (typeof window !== 'undefined' ? window.upgrades : null);
+    const resolvedState = gameState || (typeof window !== 'undefined' ? window.state : null);
+    if (!resolvedUpgrades) {
+        return { damage: 0, isCrit: false };
+    }
+    const prestigeMult = getPrestigeMult(resolvedState);
     let val = 0;
     let isCrit = false;
 
     if (source === 'click') {
-        const u = upgrades.find(x => x.id === 'clickDmg');
+        const u = resolvedUpgrades.find(x => x.id === 'clickDmg');
         val = u.getVal(u.count);
     } else {
-        const u = upgrades.find(x => x.id === 'autoDmg');
+        const u = resolvedUpgrades.find(x => x.id === 'autoDmg');
         val = u.getVal(u.count);
     }
 
-    const critU = upgrades.find(x => x.id === 'critChance');
-    const chance = critU.getVal(critU.count);
+    // Apply permanent upgrades influence (if available)
+    const perms = (typeof permUpgrades !== 'undefined') ? permUpgrades : [];
+
+    // Add permanent click bonus (flat)
+    if (source === 'click') {
+        const clickPerm = perms.find(p => p.id === 'clickBonus');
+        if (clickPerm) {
+            val += clickPerm.getVal(clickPerm.count);
+        }
+    }
+
+    // Apply permanent turret multiplier
+    if (source === 'auto') {
+        const autoPerm = perms.find(p => p.id === 'autoDmgPerm');
+        if (autoPerm) {
+            val *= (1 + autoPerm.getVal(autoPerm.count));
+        }
+    }
+
+    // Crit calculation (includes permanent critChancePerm and skill tree)
+    const critU = resolvedUpgrades.find(x => x.id === 'critChance');
+    let chance = critU.getVal(critU.count);
+    const critPerm = perms.find(p => p.id === 'critChancePerm');
+    if (critPerm) {
+        chance += critPerm.getVal(critPerm.count);
+    }
+    
+    // Add skill tree crit chance
+    const skillEffects = typeof getSkillTreeEffects === 'function' ? getSkillTreeEffects() : null;
+    if (skillEffects && skillEffects.critChance > 0) {
+        chance += skillEffects.critChance;
+    }
+
     if (Math.random() * 100 < chance) {
         val *= CONFIG.CRIT_DAMAGE_MULTIPLIER; 
         isCrit = true;
     }
 
     val *= prestigeMult;
+    
+    // Apply skill tree damage multipliers
+    const skillEffects = typeof getSkillTreeEffects === 'function' ? getSkillTreeEffects() : null;
+    if (skillEffects) {
+        // All damage multiplier
+        if (skillEffects.allDamageMult && skillEffects.allDamageMult !== 1) {
+            val *= skillEffects.allDamageMult;
+        }
+        
+        // Click damage bonus
+        if (source === 'click' && skillEffects.clickDamage > 0) {
+            val += skillEffects.clickDamage;
+        }
+        
+        // Turret damage bonus
+        if (source === 'auto' && skillEffects.turretDamage > 0) {
+            val += skillEffects.turretDamage;
+        }
+        
+        // Crit damage multiplier from omega strike
+        if (isCrit && skillEffects.omegaCritDamage > 0) {
+            val *= (1 + skillEffects.omegaCritDamage);
+        }
+        
+        // Double tap chance (for auto attacks)
+        if (source === 'auto' && skillEffects.doubleTapChance > 0) {
+            // This will be handled by the auto-fire system
+        }
+    }
+    
     return { damage: val, isCrit };
 }
 
@@ -41,6 +107,19 @@ function hitEnemy(enemy, damageInfo, floaters) {
     enemy.hp -= damage;
     enemy.hitFlash = 3; // Flash white for 3 frames
     
+    // Apply skill tree lifesteal
+    const skillEffects = typeof getSkillTreeEffects === 'function' ? getSkillTreeEffects() : null;
+    if (skillEffects && skillEffects.lifesteal > 0) {
+        const healAmount = damage * skillEffects.lifesteal;
+        if (typeof window !== 'undefined' && window.state && window.state.coreHp < window.state.maxCoreHp) {
+            window.state.coreHp = Math.min(window.state.maxCoreHp, window.state.coreHp + healAmount);
+            // Update HP bar if function exists
+            if (typeof updateHpBar === 'function') {
+                updateHpBar();
+            }
+        }
+    }
+    
     // Create damage number
     const txtColor = isCrit ? '#ff00ff' : '#fff';
     const txtSize = isCrit ? 26 : 18;
@@ -48,9 +127,9 @@ function hitEnemy(enemy, damageInfo, floaters) {
     floaters.push(new FloatingText(enemy.x, enemy.y - 25, txt, txtColor, txtSize));
     
     // Check if enemy died
-    if (enemy.hp <= 0) {
-        enemy.markedForDeletion = true;
-        createExplosion(enemy.x, enemy.y, 10, enemy.color);
+    if (enemy.hp <= 0 && !enemy.isDying) {
+        enemy.startDeathAnimation();
+        createExplosion(enemy.x, enemy.y, 15, enemy.color);
         return true; // Enemy killed
     }
     

@@ -11,52 +11,164 @@
     <link rel="stylesheet" href="css/desktop.css" media="screen and (min-width: 1024px)">
 </head>
 <body>
-    <!-- Game Container -->
-    <div id="game-container">
-        <canvas id="gameCanvas"></canvas>
-        
-        <!-- HUD Overlay -->
-        <div id="hud">
-            <div class="stat-group">
-                <div class="stat-box">
-                    <div class="stat-value currency-bits" id="money-display">0</div>
-                    <div class="stat-label">Bits</div>
+    <div id="app">
+            <!-- Gameplay Screen -->
+            <section id="gameplay-screen" class="screen">
+                <!-- Game Container -->
+                <div id="game-container">
+                    <canvas id="gameCanvas"></canvas>
+                
+                    <!-- HUD Overlay -->
+                    <div id="hud">
+                        <div class="stat-group">
+                            <div class="stat-box">
+                                <div class="stat-value currency-bits" id="money-display">0</div>
+                                <div class="stat-label">Bits</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-value" id="level-display">1</div>
+                                <div class="stat-label">Wave</div>
+                            </div>
+                        </div>
+                    
+                        <div class="hp-container">
+                            <div class="hp-bar-bg">
+                                <div class="hp-bar-fill" id="core-hp-bar"></div>
+                            </div>
+                        </div>
+                    
+                        <div class="stat-group">
+                            <div class="stat-box" id="prestige-currency-display" style="display:none;">
+                                <div class="stat-value" style="color:#aa00ff;">0 BYTES</div>
+                                <div class="stat-label">System Power</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Minimal Pause Button -->
+                    <button id="pause-btn" aria-label="Pause">II</button>
+
+                    <!-- Prestige Button -->
+                    <button id="prestige-btn" style="display:none;">⚡ REBOOT</button>
+
+                    <!-- Notification Area -->
+                    <div id="notification-area"></div>
                 </div>
-                <div class="stat-box">
-                    <div class="stat-value" id="level-display">1</div>
-                    <div class="stat-label">Wave</div>
+
+                <!-- Upgrade Panel -->
+                <div id="upgrade-panel">
+                    <div class="panel-header">⚙️ SYSTEM UPGRADES</div>
+                    <div class="upgrades-container" id="cards-container"></div>
                 </div>
-            </div>
-            
-            <div class="hp-container">
-                <div class="hp-bar-bg">
-                    <div class="hp-bar-fill" id="core-hp-bar"></div>
+
+                <!-- Pause Overlay -->
+                <div id="pause-overlay" aria-hidden="true">
+                    <div class="pause-card">
+                        <div class="pause-title">PAUSED</div>
+                        <div class="pause-subtitle">Core systems idling. Press ESC to resume.</div>
+                        <div class="pause-actions">
+                            <button class="btn-primary" id="resume-btn">Resume</button>
+                            <button class="btn-secondary" id="to-management-btn">Management Menu</button>
+                            <button class="btn-ghost" id="restart-btn">Restart Run</button>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="stat-group">
-                <div class="stat-box" id="prestige-currency-display" style="display:none;">
-                    <div class="stat-value" style="color:#aa00ff;">0 BYTES</div>
-                    <div class="stat-label">System Power</div>
+            </section>
+
+            <!-- Management Screen -->
+            <section id="management-screen" class="screen is-active">
+                <div class="management-header">
+                    <div class="management-title">
+                        <div class="title-eyebrow">Neon Core Command</div>
+                        <h1>Management Console</h1>
+                        <p>Plan long-term upgrades, reinvest credits, and prepare the next run.</p>
+                    </div>
+                    <div class="management-currencies">
+                        <div class="currency-pill" id="credits-display">
+                            <span class="pill-label">Credits</span>
+                            <span class="pill-value" id="credits-value">0</span>
+                        </div>
+                        <div class="currency-pill">
+                            <span class="pill-label">Prestige</span>
+                            <span class="pill-value" id="prestige-value">0</span>
+                        </div>
+                        <div class="currency-pill rare-currency-shards" id="shards-display">
+                            <span class="pill-label">◆ Shards</span>
+                            <span class="pill-value" id="shards-value">0</span>
+                        </div>
+                        <div class="currency-pill rare-currency-prisms" id="prisms-display">
+                            <span class="pill-label">✦ Prisms</span>
+                            <span class="pill-value" id="prisms-value">0</span>
+                        </div>
+                    </div>
                 </div>
-            </div>
+
+                <div class="management-content">
+                    <div class="run-panel">
+                        <div class="run-summary">
+                            <div class="summary-item">
+                                <div class="summary-label">Last Wave</div>
+                                <div class="summary-value" id="last-wave-value">0</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-label">Credits Earned</div>
+                                <div class="summary-value" id="last-credits-value">0</div>
+                            </div>
+                        </div>
+                        <button id="start-run-btn" class="start-run-btn">Start Run</button>
+                    </div>
+
+                    <div class="management-grid">
+                        <section class="panel-block">
+                            <div class="panel-block-header">Permanent Upgrades</div>
+                            <div class="placeholder-grid" id="permanent-upgrades"></div>
+                        </section>
+                        <section class="panel-block">
+                            <div class="panel-block-header">
+                                <span>Prestige Skill Tree</span>
+                                <span class="skill-tree-points" id="skill-tree-points">0 Spent</span>
+                            </div>
+                            <div class="skill-tree-access">
+                                <div class="skill-tree-preview">
+                                    <div class="branch-combat">⚔️ Combat</div>
+                                    <div class="branch-defense">🛡️ Defense</div>
+                                    <div class="branch-economy">💰 Economy</div>
+                                    <div class="branch-utility">⚡ Utility</div>
+                                </div>
+                                <button class="open-skill-tree-btn" onclick="openSkillTree()">
+                                    <span class="btn-icon">🌳</span>
+                                    <span class="btn-text">Open Skill Tree</span>
+                                    <span class="btn-subtext">32 Nodes • 4 Branches</span>
+                                </button>
+                            </div>
+                        </section>
+                        <section class="panel-block panel-block-skins">
+                            <div class="panel-block-header">
+                                <span>Core Skins</span>
+                                <span class="current-skin-indicator" id="current-skin-name">Neon Core</span>
+                            </div>
+                            <div class="skins-grid" id="core-skins">
+                                <!-- Skin cards will be generated by JavaScript -->
+                            </div>
+                            <div class="skin-details" id="skin-details">
+                                <div class="skin-preview" id="skin-preview"></div>
+                                <div class="skin-info">
+                                    <h4 id="skin-detail-name">Select a Skin</h4>
+                                    <p id="skin-detail-desc">Choose a skin to change your core's appearance and attack pattern.</p>
+                                    <div class="skin-attack-type" id="skin-attack-type"></div>
+                                </div>
+                            </div>
+                        </section>
+
+                    </div>
+                </div>
+
+                <div id="coin-burst-layer" aria-hidden="true"></div>
+            </section>
         </div>
 
-        <!-- Prestige Button -->
-        <button id="prestige-btn" style="display:none;">⚡ REBOOT</button>
-
-        <!-- Notification Area -->
-        <div id="notification-area"></div>
-    </div>
-
-    <!-- Upgrade Panel -->
-    <div id="upgrade-panel">
-        <div class="panel-title">⚙️ SYSTEM UPGRADES</div>
-        <div id="cards-container"></div>
-    </div>
-
-    <!-- Modal Overlay -->
-    <div id="modal-overlay">
+    <!-- Modal Overlay (legacy) -->
+    <div id="modal-overlay" style="display:none;">
         <div class="modal" id="modal-content">
             <h2 id="modal-title">CRITICAL FAILURE</h2>
             <p id="modal-msg">Core Integrity Lost.</p>
@@ -70,6 +182,9 @@
     <script src="js/data/config.js"></script>
     <script src="js/data/upgrades.js"></script>
     <script src="js/data/enemyTypes.js"></script>
+    <script src="js/data/permanentUpgrades.js"></script>
+    <script src="js/data/skins.js"></script>
+    <script src="js/data/skillTree.js"></script>
     
     <!-- 2. Utility Functions -->
     <script src="js/utils/helpers.js"></script>
@@ -83,20 +198,23 @@
     <script src="js/engine/FloatingText.js"></script>
     <script src="js/engine/Enemy.js"></script>
     <script src="js/engine/Projectile.js"></script>
+    <script src="js/engine/Collectible.js"></script>
     
     <!-- 4. Game Systems -->
     <script src="js/systems/gameState.js"></script>
     <script src="js/systems/combat.js"></script>
     <script src="js/systems/spawner.js"></script>
     <script src="js/systems/upgradeSystem.js"></script>
+    <script src="js/systems/skinSystem.js"></script>
+    <script src="js/systems/skillTreeSystem.js"></script>
     
-    <!-- 5. Rendering -->
-    <script src="js/render.js"></script>
+    <!-- 5. UI Components -->
+    <script src="js/ui/skillTreeUI.js"></script>
     
-    <!-- 6. Input Handling -->
+    <!-- 5. Input Handling -->
     <script src="js/input.js"></script>
     
-    <!-- 7. Main Game Loop -->
+    <!-- 6. Main Game Loop -->
     <script src="js/main.js"></script>
 </body>
 </html>

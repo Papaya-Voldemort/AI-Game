@@ -15,6 +15,7 @@ function initGameState(config, upgradesData) {
 }
 
 function getPrestigeMult(gameState) {
+    if (!gameState) return 1;
     return 1 + (gameState.prestigeCurrency * CONFIG.PRESTIGE_MULT_PER_BYTE);
 }
 
@@ -42,4 +43,20 @@ function resetGameState(gameState, gameUpgrades, isPrestige) {
 function updateMaxHP(gameState, gameUpgrades) {
     const maxHpU = gameUpgrades.find(u => u.id === 'maxHp');
     gameState.maxCoreHp = maxHpU.getVal(maxHpU.count);
+}
+
+/**
+ * Calculate prestige currency earned on prestige
+ * Now includes skill tree multipliers
+ */
+function calculatePrestigeGain(gameState) {
+    let baseGain = Math.floor(gameState.level / 5);
+    
+    // Apply skill tree prestige multiplier
+    const skillEffects = typeof getSkillTreeEffects === 'function' ? getSkillTreeEffects() : null;
+    if (skillEffects && skillEffects.prestigeGainMult) {
+        baseGain = Math.floor(baseGain * skillEffects.prestigeGainMult);
+    }
+    
+    return Math.max(1, baseGain);
 }

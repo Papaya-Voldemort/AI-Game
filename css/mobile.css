@@ -1,125 +1,50 @@
 /**
- * Mobile-specific styles
- * Responsive design for mobile devices
+ * Mobile-specific enhancements
+ * Additional tweaks for touch devices
+ * Note: Main responsive styles are in main.css
  */
 
 @media only screen and (max-width: 768px) {
-    /* Larger touch targets on mobile */
-    .card {
-        min-width: 90px;
-        padding: 12px 8px;
+    /* Enhanced touch targets */
+    .card,
+    .perm-card,
+    .tree-node,
+    #core-skins .placeholder-card {
+        cursor: pointer;
+        -webkit-tap-highlight-color: rgba(0, 255, 255, 0.1);
     }
     
-    .card-icon {
-        font-size: 2rem;
+    /* Prevent text selection on interactive elements */
+    .card:active,
+    .perm-card:active,
+    .start-run-btn:active {
+        -webkit-user-select: none;
+        user-select: none;
     }
     
-    .card-title {
-        font-size: 0.8rem;
+    /* Smooth scrolling for upgrades container */
+    .upgrades-container {
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
     }
     
-    /* Larger stat boxes for easier reading */
-    .stat-box {
-        min-width: 60px;
-        padding: 6px 12px;
-    }
-    
-    .stat-value {
-        font-size: 1.1rem;
-    }
-    
-    .stat-label {
-        font-size: 0.6rem;
-    }
-    
-    /* Adjust HUD for mobile */
-    #hud {
-        padding: 10px;
-        gap: 8px;
-    }
-    
-    .hp-container {
-        max-width: 250px;
-        margin: 0 10px;
-    }
-    
-    /* Adjust upgrade cards container */
-    #upgrade-panel {
-        max-height: 25vh;
-    }
-    
-    #cards-container {
-        gap: 8px;
-        padding: 10px;
-    }
-    
-    /* Modal adjustments */
-    .modal {
-        width: 90%;
-        padding: 30px 20px;
-    }
-    
-    .modal h2 {
-        font-size: 1.8rem;
-    }
-    
-    .modal p {
-        font-size: 1rem;
-    }
-    
-    /* Notification positioning */
-    #notification-area {
-        top: 60px;
-    }
-    
-    .notification {
-        font-size: 0.8rem;
-        padding: 10px 16px;
-    }
-    
-    /* Prestige button */
-    #prestige-btn {
-        font-size: 0.65rem;
-        padding: 6px 12px;
+    .upgrades-container .card {
+        scroll-snap-align: center;
     }
 }
 
-@media only screen and (max-width: 480px) {
-    /* Extra small devices */
-    .stat-box {
-        min-width: 50px;
-        padding: 4px 8px;
-    }
-    
-    .stat-value {
-        font-size: 1rem;
-    }
-    
-    .stat-label {
-        font-size: 0.55rem;
-    }
-    
-    .card {
-        min-width: 80px;
-        padding: 10px 6px;
-    }
-    
-    .card-icon {
-        font-size: 1.5rem;
-    }
-    
-    .modal h2 {
-        font-size: 1.5rem;
-    }
-}
-
-/* Portrait orientation adjustments */
-@media only screen and (orientation: portrait) {
-    #upgrade-panel {
-        max-height: 30vh;
-    }
-    
-    #game-container {
-        min-height: 60vh;
+/* iOS Safari specific fixes */
+@supports (-webkit-touch-callout: none) {
+    @media only screen and (max-width: 768px) {
+        .management-content {
+            /* Prevent bounce effect on iOS */
+            overscroll-behavior: contain;
+        }
+        
+        .currency-pill,
+        .stat-box {
+            /* Fix for iOS backdrop-filter performance */
+            transform: translateZ(0);
+        }
     }
 }
