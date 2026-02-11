@@ -36,6 +36,14 @@ const CONFIG = {
     // Spawn settings
     MIN_SPAWN_RATE: 250,
     SPAWN_RATE_DECREASE_PER_LEVEL: 18,
+    EARLY_GAME_GRACE_LEVELS: 8,
+    ADAPTIVE_DIFFICULTY: {
+        MAX_RATE_MULT: 1.3,
+        MIN_RATE_MULT: 0.72,
+        DANGER_HP_THRESHOLD: 0.4,
+        DANGER_RATE_BOOST: 0.28,
+        MOMENTUM_BONUS_PER_LEVEL: 0.02
+    },
     
     // Combat settings
     CRIT_DAMAGE_MULTIPLIER: 2.5,
@@ -65,3 +73,4 @@ const CONFIG = {
 Object.freeze(CONFIG);
 Object.freeze(CONFIG.INITIAL_STATE);
 Object.freeze(CONFIG.SKILL_TREE);
+Object.freeze(CONFIG.ADAPTIVE_DIFFICULTY);

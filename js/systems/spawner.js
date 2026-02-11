@@ -3,7 +3,7 @@
  * Handles enemy wave spawning logic
  */
 
-function updateSpawner(dt, state, enemies, canvasHeight, spawnDistance, upgrades) {
+function updateSpawner(dt, state, enemies, canvasHeight, spawnDistance, upgrades, paceMultiplier = 1) {
     state.spawnTimer -= dt;
     
     if (state.spawnTimer <= 0) {
@@ -12,11 +12,12 @@ function updateSpawner(dt, state, enemies, canvasHeight, spawnDistance, upgrades
         enemies.push(enemy);
         
         // Calculate next spawn time
-        const rate = Math.max(
-            CONFIG.MIN_SPAWN_RATE, 
+        const baseRate = Math.max(
+            CONFIG.MIN_SPAWN_RATE,
             state.spawnRate - (state.level * CONFIG.SPAWN_RATE_DECREASE_PER_LEVEL)
         );
-        state.spawnTimer = rate;
+        const adjustedRate = Math.max(CONFIG.MIN_SPAWN_RATE, baseRate * paceMultiplier);
+        state.spawnTimer = adjustedRate;
     }
 }
 
