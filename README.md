@@ -56,9 +56,11 @@ AI-Game/
 │   ├── main.js            # Main game loop
 │   ├── render.js          # Rendering system
 │   └── input.js           # Input handling
-└── docs/
-    ├── README.md          # This file
-    └── PLAN.md            # Development roadmap
+├── scripts/
+│   └── inline_assets.py   # Single-file build script
+├── PLAN.md                # Development roadmap
+├── REFACTORING_SUMMARY.md # Refactor notes
+└── README.md              # This file
 ```
 
 ## 🎨 Game Elements
@@ -94,6 +96,15 @@ AI-Game/
 
 ### Running Locally
 Simply open `index.html` in your browser. No server required!
+
+### Single-file Build
+Generate a portable, single HTML file build:
+
+```bash
+python scripts/inline_assets.py index.html -o dist/index.html
+```
+
+The GitHub Actions workflow publishes this single-file build to GitHub Pages on pushes to `main`.
 
 ### Making Changes
 1. Edit files in their respective directories

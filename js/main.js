@@ -198,7 +198,7 @@ function toggleAudio() {
     const nextValue = !AudioEngine.enabled;
     AudioEngine.setEnabled(nextValue);
     updateAudioToggleUI();
-    showNotification(nextValue ? 'Audio Reactor Online' : 'Audio Reactor Offline');
+    showNotification(AudioEngine.enabled ? 'Audio Reactor Online' : 'Audio Reactor Offline');
 }
 
 function updateAudioToggleUI() {
