@@ -113,7 +113,10 @@ const AudioEngine = {
 
     setEnabled(value) {
         this.init();
-        if (!this.initialized) return;
+        if (!this.initialized) {
+            this.enabled = false;
+            return false;
+        }
 
         this.enabled = value;
         if (this.enabled && this.ctx.state === 'suspended') {
@@ -125,6 +128,7 @@ const AudioEngine = {
         this.combatGain.gain.cancelScheduledValues(now);
         this.ambientGain.gain.linearRampToValueAtTime(this.enabled ? 0.05 : 0, now + 0.25);
         this.combatGain.gain.linearRampToValueAtTime(0, now + 0.12);
+        return this.enabled;
     },
 
     updateIntensity() {
@@ -196,9 +200,9 @@ const AudioEngine = {
 
 function toggleAudio() {
     const nextValue = !AudioEngine.enabled;
-    AudioEngine.setEnabled(nextValue);
+    const isEnabled = AudioEngine.setEnabled(nextValue);
     updateAudioToggleUI();
-    showNotification(nextValue ? 'Audio Reactor Online' : 'Audio Reactor Offline');
+    showNotification(isEnabled ? 'Audio Reactor Online' : 'Audio Reactor Offline');
 }
 
 function updateAudioToggleUI() {
